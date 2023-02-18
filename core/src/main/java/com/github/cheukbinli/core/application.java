@@ -5,6 +5,7 @@ import com.github.cheukbinli.core.im.dodo.DodoApiServer;
 import com.github.cheukbinli.core.im.dodo.model.Authorization;
 import com.github.cheukbinli.core.model.NoticeFunctionModel;
 import com.github.cheukbinli.core.model.TradeElementModel;
+import com.github.cheukbinli.core.ns.constant.SwitchButton;
 import com.github.cheukbinli.core.ns.model.response.GeneratePokemonResponse;
 import com.github.cheukbinli.core.queue.DefaulttQueueService;
 import com.github.cheukbinli.core.queue.QueueService;
@@ -39,6 +40,7 @@ public class application {
     private String dodoApiPath = "https://botopen.imdodo.com";
     Thread queueConsumer;
     Thread verifiedQueueConsumer;
+    Thread intervalAction;
     volatile AtomicBoolean queueConsumerStatus = new AtomicBoolean(false);
     volatile AtomicBoolean verifiedQueueConsumerStatus = new AtomicBoolean(false);
     private Map<String, Object> trainerInfo = null;
@@ -54,6 +56,7 @@ public class application {
         //列队消费
         verifiedQueueConsumStart();
         queueConsumStart();
+        intervalAction();
         trainerInfo = new HashMap<>();
         trainerInfo.put("GenerateOT", "伍六七");
         trainerInfo.put("DisplayTID", "800001");
@@ -208,6 +211,31 @@ public class application {
             }
         });
         queueConsumer.start();
+    }
+
+    void intervalAction() {
+        intervalAction = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        synchronized (this) {
+                            wait(3600000);
+                        }
+                        for (int i = 0; i < 10; i++) {
+                            if (switchSysbotAggregateService.getSwitchService().IsOnOverworld()) {
+                                switchSysbotAggregateService.getSwitchCommandApi().clickButton(SwitchButton.Button.X, 300);
+                                break;
+                            }
+                            Thread.sleep(2000);
+                        }
+                    } catch (Exception e) {
+                        GlobalLogger.append(e);
+                    }
+                }
+            }
+        });
+        intervalAction.start();
     }
 
     public static void main(String[] args) throws DecoderException, IOException {
