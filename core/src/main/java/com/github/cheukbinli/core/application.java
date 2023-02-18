@@ -58,6 +58,14 @@ public class application {
         trainerInfo.put("GenerateOT", "伍六七");
         trainerInfo.put("DisplayTID", "800001");
         trainerInfo.put("DisplaySID", 249781);
+
+        try {
+            imServer.channelMessageSend("1485346", "online", true, "小喇叭上班打卡，开始派送咯。");
+        } catch (IOException e) {
+            GlobalLogger.append(e);
+//            throw new RuntimeException(e);
+        }
+
     }
 
     void verifiedQueueConsumStart() {

@@ -151,7 +151,7 @@ public class DodoApiServer implements ImServer {
     }
 
     public void channelMessageSend(String channel, String atId, boolean atAll, String message) throws IOException {
-        dodoApi.SetChannelMessageSend(new SetChannelMessageSendRequest().setChannelId(channel).setMessageBody(new MessageBodyText().setContent(String.format("<@%s>%s", atAll ? "all" : "!" + atId, message))));
+        dodoApi.SetChannelMessageSend(new SetChannelMessageSendRequest().setChannelId(channel).setMessageBody(new MessageBodyText().setContent(String.format("<@%s>%s", atAll ? atId : "!" + atId, message))));
     }
 
     private void channelMessageSend(String channel, String message) throws IOException {
