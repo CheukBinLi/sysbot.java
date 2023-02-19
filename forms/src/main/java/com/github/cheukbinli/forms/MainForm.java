@@ -3,10 +3,14 @@ package com.github.cheukbinli.forms;
 import com.github.cheukbinli.core.GlobalLogger;
 import com.github.cheukbinli.core.application;
 import com.github.cheukbinli.core.ns.constant.ScreenState;
+import org.apache.commons.codec.binary.Hex;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,8 +46,42 @@ public class MainForm extends JFrame {
 
     volatile boolean pwoerOn = true;
 
+    private application a = null;
+    private Image image = null;
+    private volatile boolean screenshot = false;
+
+    @Override
+    public void paintComponents(Graphics g) {
+        rePrint(g);
+        super.paintComponents(g);
+    }
+
+    public void rePrint(Graphics g) {
+        Thread repring = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Point point = textPane1.getLocation();
+                while (true) {
+                    if (null == image) {
+                        synchronized (this) {
+                            try {
+                                wait(1000);
+                                continue;
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                    textPane1.getGraphics().drawImage(image, point.x, point.y, textPane1.getWidth(), textPane1.getHeight(), null);
+                    image = null;
+                }
+            }
+        });
+        repring.start();
+    }
+
     public MainForm() {
-        application a = new application();
+        a = new application();
         ExecutorService executorService = Executors.newCachedThreadPool();
         启动Button.addActionListener(new ActionListener() {
             @Override
@@ -107,16 +145,17 @@ public class MainForm extends JFrame {
             public void actionPerformed(ActionEvent e) {
 //                try {
 //                    byte[] imageByte = a.getSwitchSysbotAggregateService().getSwitchCommandApi().pixelPeek();
-//                    FileOutputStream out = new FileOutputStream(new File("/Users/cheukbinli/Downloads/11111.jpg"));
-//                    out.write(imageByte);
-//                    out.close();
-//                } catch (IOException ex) {
-//                    throw new RuntimeException(ex);
-//                } catch (InterruptedException ex) {
-//                    throw new RuntimeException(ex);
-//                } catch (DecoderException ex) {
+//                    textPane1.getLocation();
+//                    image = ImageIO.read(new ByteArrayInputStream(Hex.encodeHexString(imageByte).getBytes()));
+//                } catch (Exception ex) {
 //                    throw new RuntimeException(ex);
 //                }
+                try {
+                    byte[] imageByte = a.getSwitchSysbotAggregateService().getSwitchCommandApi().pixelPeek();
+                    image = ImageIO.read(new ByteArrayInputStream(Hex.decodeHex(new String(imageByte))));
+                } catch (Exception e1) {
+                    throw new RuntimeException(e1);
+                }
             }
         });
         button1.addActionListener(new ActionListener() {

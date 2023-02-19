@@ -14,6 +14,7 @@ public class Main {
         j.setVisible(true);
         j.setSize(800, 640);
         j.setContentPane(j.panel1);
+        j.paintComponents(j.getGraphics());
         j.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 }

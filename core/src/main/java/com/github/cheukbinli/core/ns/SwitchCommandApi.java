@@ -8,21 +8,22 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 @RequiredArgsConstructor
 public class SwitchCommandApi extends BufferPoolUtil {
 
-    static String END_CODE = "\r\n";
+    static String WRITE_END_CODE = "\r\n";
+    static char READ_END_CODE = '\n';
     static byte[] BLANK_BYTE = new byte[0];
     static final int DEFAULT_SIZE = 17;
 
     SocketChannel socketChannel;
+    Socket socket;
     private final String ip;
     private final int port;
 
@@ -57,6 +58,23 @@ public class SwitchCommandApi extends BufferPoolUtil {
         return socketChannel;
     }
 
+    public byte[] read(Socket socket, int size) throws IOException {
+        InputStream in = socket.getInputStream();
+        int code;
+        byte[] data = new byte[size];
+        in.read(data, 0, size);
+        return data;
+    }
+
+    public byte[] read(Socket socket, char endCode) throws IOException {
+        InputStream in = socket.getInputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int code;
+        while ((code = in.read()) != endCode) {
+            out.write((char) code);
+        }
+        return out.toByteArray();
+    }
 
     public String longArrayToHexString(long... pointer) {
         if (pointer.length == 1) {
@@ -84,7 +102,7 @@ public class SwitchCommandApi extends BufferPoolUtil {
         if (null == content || content.length() < 1) {
             return BLANK_BYTE;
         }
-        return content.endsWith(END_CODE) ? content.getBytes() : (content + END_CODE).getBytes();
+        return content.endsWith(WRITE_END_CODE) ? content.getBytes() : (content + WRITE_END_CODE).getBytes();
     }
 
     public String checkPrefix(String data, String prefix) {
@@ -112,14 +130,15 @@ public class SwitchCommandApi extends BufferPoolUtil {
     public byte[] pointerAll(long... pointer) throws IOException {
         String command = "pointerAll " + longArrayToHexString(pointer);
         getSocketChannel().write(ByteBuffer.wrap(encode(command)));
-        ByteBuffer byteBuffer = ByteBuffer.allocate(DEFAULT_SIZE);
-        getSocketChannel().read(byteBuffer);
-        if (null == byteBuffer) {
-            return BLANK_BYTE;
-        }
-        byte[] result = new byte[DEFAULT_SIZE - 1];
-        byteBuffer.get(0, result);
-        return result;
+//        ByteBuffer byteBuffer = ByteBuffer.allocate(DEFAULT_SIZE);
+//        getSocketChannel().read(byteBuffer);
+//        if (null == byteBuffer) {
+//            return BLANK_BYTE;
+//        }
+//        byte[] result = new byte[DEFAULT_SIZE - 1];
+//        byteBuffer.get(0, result);
+//        return result;
+        return read(getSocketChannel().socket(), READ_END_CODE);
     }
 
     /***
@@ -132,15 +151,16 @@ public class SwitchCommandApi extends BufferPoolUtil {
     public byte[] peek(int size, long... pointer) throws IOException {
         String command = "peek " + longArrayToHexString(pointer) + " " + size;
         getSocketChannel().write(ByteBuffer.wrap(encode(command)));
-        size = size * 2 + 1;
-        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-        getSocketChannel().read(byteBuffer);
-        if (null == byteBuffer) {
-            return null;
-        }
-        byte[] result = new byte[size - 1];
-        byteBuffer.get(0, result);
-        return result;
+//        size = size * 2 + 1;
+//        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+//        getSocketChannel().read(byteBuffer);
+//        if (null == byteBuffer) {
+//            return null;
+//        }
+//        byte[] result = new byte[size - 1];
+//        byteBuffer.get(0, result);
+//        return result;
+        return read(getSocketChannel().socket(), READ_END_CODE);
     }
 
     /***
@@ -153,15 +173,16 @@ public class SwitchCommandApi extends BufferPoolUtil {
     public byte[] peekAbsolute(int size, long... pointer) throws IOException {
         String command = "peekAbsolute " + longArrayToHexString(pointer) + " " + size;
         getSocketChannel().write(ByteBuffer.wrap(encode(command)));
-        size = size * 2 + 1;
-        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-        getSocketChannel().read(byteBuffer);
-        if (null == byteBuffer) {
-            return null;
-        }
-        byte[] result = new byte[size - 1];
-        byteBuffer.get(0, result);
-        return result;
+//        size = size * 2 + 1;
+//        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+//        getSocketChannel().read(byteBuffer);
+//        if (null == byteBuffer) {
+//            return null;
+//        }
+//        byte[] result = new byte[size - 1];
+//        byteBuffer.get(0, result);
+//        return result;
+        return read(getSocketChannel().socket(), READ_END_CODE);
     }
 
     /***
@@ -174,15 +195,16 @@ public class SwitchCommandApi extends BufferPoolUtil {
     public byte[] pointerPeek(int size, long... pointer) throws IOException {
         String command = "pointerPeek " + size + " " + longArrayToString(pointer);
         getSocketChannel().write(ByteBuffer.wrap(encode(command)));
-        size = size * 2 + 1;
-        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-        getSocketChannel().read(byteBuffer);
-        if (null == byteBuffer) {
-            return null;
-        }
-        byte[] result = new byte[size - 1];
-        byteBuffer.get(0, result);
-        return result;
+//        size = size * 2 + 1;
+//        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+//        getSocketChannel().read(byteBuffer);
+//        if (null == byteBuffer) {
+//            return null;
+//        }
+//        byte[] result = new byte[size - 1];
+//        byteBuffer.get(0, result);
+//        return result;
+        return read(getSocketChannel().socket(), READ_END_CODE);
     }
 
     /***
@@ -193,14 +215,15 @@ public class SwitchCommandApi extends BufferPoolUtil {
     public byte[] getTitleID() throws IOException {
         String command = "getTitleID ";
         getSocketChannel().write(ByteBuffer.wrap(encode(command)));
-        ByteBuffer byteBuffer = ByteBuffer.allocate(DEFAULT_SIZE);
-        getSocketChannel().read(byteBuffer);
-        if (null == byteBuffer) {
-            return null;
-        }
-        byte[] result = new byte[DEFAULT_SIZE - 1];
-        byteBuffer.get(0, result);
-        return result;
+//        ByteBuffer byteBuffer = ByteBuffer.allocate(DEFAULT_SIZE);
+//        getSocketChannel().read(byteBuffer);
+//        if (null == byteBuffer) {
+//            return null;
+//        }
+//        byte[] result = new byte[DEFAULT_SIZE - 1];
+//        byteBuffer.get(0, result);
+//        return result;
+        return read(getSocketChannel().socket(), READ_END_CODE);
     }
 
 
@@ -322,17 +345,14 @@ public class SwitchCommandApi extends BufferPoolUtil {
     public byte[] pixelPeek() throws IOException, InterruptedException, DecoderException {
         String command = "pixelPeek";
         getSocketChannel().write(ByteBuffer.wrap(encode(command)));
-//        ByteBuffer byteBuffer = borrowResource();
-        ByteBuffer byteBuffer = ByteBuffer.allocate(0x7D000);
-        int len = getSocketChannel().read(byteBuffer);
-        if (null == byteBuffer) {
-            return null;
-        }
-        byte[] result = new byte[len];
-        byteBuffer.get(0, result);
-        System.out.println(new String(result));
-//        return Hex.decodeHex(new String(result));
-        return result;
+//        InputStream in = getSocketChannel().socket().getInputStream();
+//        ByteArrayOutputStream out = new ByteArrayOutputStream();
+//        int code;
+//        while ((code = in.read()) != '\n') {
+//            out.write((char) code);
+//        }
+//        return out.toByteArray();
+        return read(getSocketChannel().socket(), READ_END_CODE);
     }
 
     /***
@@ -382,11 +402,16 @@ public class SwitchCommandApi extends BufferPoolUtil {
 //        api.clickButton(SwitchButton.Button.A, 4000);
         try {
             byte[] imageByte = api.pixelPeek();
-            byte[] imageByte1= Hex.decodeHex(new String(imageByte));
-            System.out.println(new String(imageByte1));
-            FileOutputStream out = new FileOutputStream(new File("/Users/cheukbinli/Downloads/11111.gif"));
+//            byte[] imageByte = api.pixelPeekBio();
+//            System.out.println((int) imageByte[imageByte.length - 1]);
+//            System.out.println((int) '\n');
+            byte[] imageByte1 = Hex.decodeHex(new String(imageByte));
+//            System.out.println(new String(imageByte1));
+
+            FileOutputStream out = new FileOutputStream(new File("/Users/cheukbinli/Downloads/11111.jpg"));
             out.write(imageByte1);
             out.close();
+
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         } catch (InterruptedException ex) {
