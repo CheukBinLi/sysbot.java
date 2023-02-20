@@ -13,6 +13,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 
 @RequiredArgsConstructor
 public class SwitchCommandApi extends BufferPoolUtil {
@@ -173,7 +174,7 @@ public class SwitchCommandApi extends BufferPoolUtil {
     public byte[] peekAbsolute(int size, long... pointer) throws IOException {
         String command = "peekAbsolute " + longArrayToHexString(pointer) + " " + size;
         getSocketChannel().write(ByteBuffer.wrap(encode(command)));
-//        size = size * 2 + 1;
+        size = size * 2 + 1;
 //        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
 //        getSocketChannel().read(byteBuffer);
 //        if (null == byteBuffer) {
@@ -182,7 +183,8 @@ public class SwitchCommandApi extends BufferPoolUtil {
 //        byte[] result = new byte[size - 1];
 //        byteBuffer.get(0, result);
 //        return result;
-        return read(getSocketChannel().socket(), READ_END_CODE);
+//        return read(getSocketChannel().socket(), READ_END_CODE);
+        return Arrays.copyOf(read(getSocketChannel().socket(), size), size - 1);
     }
 
     /***
