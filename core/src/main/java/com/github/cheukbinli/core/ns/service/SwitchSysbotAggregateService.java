@@ -37,6 +37,7 @@ public class SwitchSysbotAggregateService {
     SysBotApi sysBotApi;
     @Getter
     private DecodeTrainerResponse.Data trainerInfo;
+    private Map<String, Object> defaultAdditional = new HashMap<>();
 
     public SwitchSysbotAggregateService(String switchIp, int switchPort, String sysbotIp, int sysbotPort) {
         this.switchIp = switchIp;
@@ -48,6 +49,9 @@ public class SwitchSysbotAggregateService {
         this.sysBotApi = new SysBotApi(sysbotIp, sysbotPort);
         try {
             trainerInfo = getMyTrainer().getData();
+            defaultAdditional.put("GenerateOT", trainerInfo.getGenerateOT());
+            defaultAdditional.put("DisplayTID", trainerInfo.getDisplayTID());
+            defaultAdditional.put("DisplaySID", trainerInfo.getDisplaySID());
         } catch (Exception e) {
             GlobalLogger.append(e);
             throw new RuntimeException(e);
@@ -129,7 +133,7 @@ public class SwitchSysbotAggregateService {
 
     public void trade(final TradeElementModel tradeElementModel, Function<TradeElementModel, String> noticeFunction) throws DecoderException, IOException, InterruptedException {
 
-        Map<String, Object> additional = new HashMap<>();
+        Map<String, Object> additional = defaultAdditional;
         DecodeTrainerResponse trainerResponse = getMyTrainer();
         List<byte[]> pkmList = new ArrayList<>();
         String pkmContent = tradeElementModel.getData().getContent();
@@ -162,6 +166,7 @@ public class SwitchSysbotAggregateService {
         DecodeTradePartnerResponse partnersResponse = getTradePartnerInfo();
         for (DecodeTradePartnerResponse.Data data : partnersResponse.getData()) {
             if (!(trainerResponse.getData().getGenerateOT().equals(data.getOT()) && trainerResponse.getData().getDisplaySID().equals(data.getDisplaySID()) && trainerResponse.getData().getDisplayTID().equals(data.getDisplayTID()))) {
+                additional = new HashMap<>();
                 additional.put("GenerateOT", data.getOT());
                 additional.put("DisplayTID", data.getDisplayTID());
                 additional.put("DisplaySID", data.getDisplaySID());
