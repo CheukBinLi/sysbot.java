@@ -831,7 +831,7 @@
                                   </grid>
                                 </constraints>
                                 <properties>
-                                  <text value="为造成不必要的损耗(24小时在线)，派送时间调整为：\n1、上午的12点至14点；2、晚上6点到0点。\n生效为日期：2023-02-21"/>
+                                  <text value="为造成不必要的损耗(24小时在线)，派送时间调整为：&#10;1、上午的12点至14点；&#10;2、晚上6点到0点。&#10;生效为日期：2023-02-21"/>
                                 </properties>
                               </component>
                               <component id="39df0" class="javax.swing.JButton" binding="发送Button" default-binding="true">
