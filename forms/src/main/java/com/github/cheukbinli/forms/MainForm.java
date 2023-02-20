@@ -2,6 +2,10 @@ package com.github.cheukbinli.forms;
 
 import com.github.cheukbinli.core.GlobalLogger;
 import com.github.cheukbinli.core.application;
+import com.github.cheukbinli.core.im.dodo.DodoApi;
+import com.github.cheukbinli.core.im.dodo.model.Authorization;
+import com.github.cheukbinli.core.im.dodo.model.basic.MessageBodyText;
+import com.github.cheukbinli.core.im.dodo.model.dto.request.SetChannelMessageSendRequest;
 import com.github.cheukbinli.core.ns.constant.ScreenState;
 import org.apache.commons.codec.binary.Hex;
 
@@ -43,12 +47,22 @@ public class MainForm extends JFrame {
     public JPanel picturePane;
     private JTextPane textPane1;
     private JButton button1;
+    private JTextArea noticeMessagetextArea3;
+    private JButton 发送Button;
+    private JButton 清空Button;
+    private JTextField noticeIslandSourceIdTextField;
+    private JTextField noticeChannelIDTextField;
+    private JTextField dodoApiPathTextField;
+    private JTextField noticeClientIdTextField2;
+    private JTextField noticeTokenTextField1;
+    private JButton 连接Button;
 
     volatile boolean pwoerOn = true;
 
     private application a = null;
     private Image image = null;
     private volatile boolean screenshot = false;
+    private DodoApi noticeRobot;
 
     @Override
     public void paintComponents(Graphics g) {
@@ -178,6 +192,38 @@ public class MainForm extends JFrame {
                     throw new RuntimeException(ex);
                 } catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
+                }
+            }
+        });
+        连接Button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                noticeRobot = new DodoApi(
+                        dodoApiPathTextField.getText(),
+                        new Authorization(
+                                noticeIslandSourceIdTextField.getText(),
+                                noticeClientIdTextField2.getText(),
+                                noticeTokenTextField1.getText()));
+                noticeRobot.init();
+                连接Button.setEnabled(false);
+            }
+        });
+        发送Button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (null == noticeRobot) {
+                    GlobalLogger.append("公告机器人末初始化");
+                    return;
+                }
+                try {
+                    noticeRobot.SetChannelMessageSend(
+                            new SetChannelMessageSendRequest()
+                                    .setChannelId(noticeChannelIDTextField.getText())
+                                    .setMessageBody(new MessageBodyText(String.format("<@online>%s", noticeMessagetextArea3.getText())))
+                    );
+                } catch (IOException ex) {
+                    GlobalLogger.append(ex);
+                    ex.printStackTrace();
                 }
             }
         });
