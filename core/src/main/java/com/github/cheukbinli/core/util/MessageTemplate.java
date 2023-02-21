@@ -7,8 +7,8 @@ public class MessageTemplate {
         CONNECTION,
         SUCCESS,
         FAIL,
-        ROW_NUMBER;
-
+        ROW_NUMBER,
+        ERROR_MSG
     }
 
     public static String messageTemplate(String dodoId, String dodoName, String pkmName, String myTrainer, String toTrainer, int position, String errMsg, MessageTemplateStatus status) {
@@ -32,6 +32,8 @@ public class MessageTemplate {
                 return String.format("<@!%s>\n您人呢！消失了吗！交易失败原因：**%s!**", dodoId, errMsg);
             case ROW_NUMBER:
                 return String.format("<@!%s>注意%s个排号以后该到您了！", dodoId, position);
+            case ERROR_MSG:
+                return String.format("<@!%s>errMsg", dodoId, errMsg);
             default:
                 return "";
         }

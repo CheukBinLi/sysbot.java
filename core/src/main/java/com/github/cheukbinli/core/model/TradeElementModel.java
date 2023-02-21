@@ -17,6 +17,7 @@ public class TradeElementModel extends ElementModel<TradeElementModel.Data> {
         private String content;
         //批量限制数值
         private int pkmLimit = 2;
+        private String additional;
 
         public Data(String pkmName, String randomCode, String content) {
             this.pkmName = pkmName;

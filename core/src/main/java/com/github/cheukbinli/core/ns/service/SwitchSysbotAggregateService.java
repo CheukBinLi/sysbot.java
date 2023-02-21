@@ -1,6 +1,7 @@
 package com.github.cheukbinli.core.ns.service;
 
 import com.github.cheukbinli.core.GlobalLogger;
+import com.github.cheukbinli.core.model.FunctionResult;
 import com.github.cheukbinli.core.model.TradeElementModel;
 import com.github.cheukbinli.core.ns.model.response.DecodeTradePartnerResponse;
 import com.github.cheukbinli.core.ns.model.response.DecodeTrainerResponse;
@@ -128,10 +129,10 @@ public class SwitchSysbotAggregateService {
     }
 
     public void trade() throws DecoderException, IOException, InterruptedException {
-        trade((TradeElementModel) new TradeElementModel().setData(new TradeElementModel.Data("", "", "振翼发 6v 闪光 梦境球 大个子之证 全奖章 全技能 + 甲贺忍蛙 闪光 6V 全技能 小个子 终极球+喵头目 闪光 6V 全技能 小个子 终极球+赛富豪 6V 全技能 大个子 终极球 + 呆壳兽 闪光 6V 全技能 大个子 终极球", 1)), null);
+        trade((TradeElementModel) new TradeElementModel().setData(new TradeElementModel.Data("", "", "振翼发 6v 闪光 梦境球 大个子之证 全奖章 全技能 + 甲贺忍蛙 闪光 6V 全技能 小个子 终极球+喵头目 闪光 6V 全技能 小个子 终极球+赛富豪 6V 全技能 大个子 终极球 + 呆壳兽 闪光 6V 全技能 大个子 终极球", 1, null)), null, null);
     }
 
-    public void trade(final TradeElementModel tradeElementModel, Function<TradeElementModel, String> noticeFunction) throws DecoderException, IOException, InterruptedException {
+    public void trade(final TradeElementModel tradeElementModel, Function<TradeElementModel, String> noticeFunction, Function<DecodeTrainerResponse.Data, FunctionResult<Boolean>> verification) throws DecoderException, IOException, InterruptedException {
 
         Map<String, Object> additional = defaultAdditional;
         DecodeTrainerResponse trainerResponse = getMyTrainer();
@@ -175,6 +176,14 @@ public class SwitchSysbotAggregateService {
                 //noticeFunction.apply((TradeElementModel) tradeElementModel.setOperationMessage("连接成功。NID:" + switchService.GetTradePartnerNID() + " 客户:" + data.getOT() + " TID:" + data.getDisplayTID() + " SID:" + data.getDisplaySID()));
                 break;
             }
+        }
+
+        FunctionResult<Boolean> verificationResult = verification.apply(new DecodeTrainerResponse.Data().setNintendoId(switchService.GetTradePartnerNID()).setAdditional(tradeElementModel.getData().getAdditional()));
+        if (!verificationResult.isSuccess()) {
+            noticeFunction.apply((TradeElementModel) tradeElementModel.setOperationMessage(
+                    MessageTemplate.messageTemplate(tradeElementModel.getIdentity(), null, null, null, null, 0, verificationResult.getMsg(), MessageTemplate.MessageTemplateStatus.ERROR_MSG))
+            );
+            return;
         }
 
         //@TODO 查询用户黑名单
