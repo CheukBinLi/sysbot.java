@@ -29,7 +29,7 @@ public interface EventHandler<Channel, Model> {
 //        observer(new EventMessage<>(getEventManager().getImtype(), eventSubjectModel.getData().getEventType(), model));
     }
 
-    boolean doExcute(ImChannel<Channel> channel, EventSubjectModel eventSubjectModel, Model content);
+    boolean doExcute(ImChannel<Channel> channel, EventSubjectModel eventSubjectModel, Model content) throws IOException;
 
     ElementModel noticeObserver(EventSubjectModel eventSubjectModel, Model mode) throws IOException;
 

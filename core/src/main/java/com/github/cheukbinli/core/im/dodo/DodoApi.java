@@ -9,15 +9,16 @@ import com.github.cheukbinli.core.im.dodo.model.dto.request.SetChannelMessageSen
 import com.github.cheukbinli.core.im.dodo.model.dto.request.SetPersonalMessageSendRequest;
 import com.github.cheukbinli.core.im.dodo.model.dto.resopnse.GetBotInfoApiResponse;
 import com.github.cheukbinli.core.im.dodo.model.dto.resopnse.GetChannelListResponse;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-import retrofit2.http.Body;
-import retrofit2.http.HeaderMap;
-import retrofit2.http.POST;
+import retrofit2.http.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,6 +68,28 @@ public class DodoApi {
 
     public DodoApiService getService() {
         return dodoApiService;
+    }
+
+    public ByteArrayOutputStream download(String url, int size) throws IOException {
+        Call<ResponseBody> call = getService().download(url);
+        Response<ResponseBody> body = call.execute();
+        InputStream in = body.body().byteStream();
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        try {
+            int code;
+            if (size > 0) {
+                byte[] buffer = new byte[size];
+                in.read(buffer);
+                result.write(buffer);
+            } else {
+                while ((code = in.read()) > 0) {
+                    result.write(code);
+                }
+            }
+        } finally {
+            in.close();
+        }
+        return result;
     }
 
     public String getWebSocketConnection() throws IOException {
@@ -133,6 +156,10 @@ public class DodoApi {
     }
 
     public interface DodoApiService {
+
+        @Streaming
+        @GET
+        Call<ResponseBody> download(@Url String fileUrl);
 
         /***
          * 获取WEBSOCKET 连接

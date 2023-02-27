@@ -129,7 +129,7 @@ public class SwitchSysbotAggregateService {
     }
 
     public void trade() throws DecoderException, IOException, InterruptedException {
-        trade((TradeElementModel) new TradeElementModel().setData(new TradeElementModel.Data("", "", "振翼发 6v 闪光 梦境球 大个子之证 全奖章 全技能 + 甲贺忍蛙 闪光 6V 全技能 小个子 终极球+喵头目 闪光 6V 全技能 小个子 终极球+赛富豪 6V 全技能 大个子 终极球 + 呆壳兽 闪光 6V 全技能 大个子 终极球", 1, null)), null, null);
+        trade((TradeElementModel) new TradeElementModel().setData(new TradeElementModel.Data("", "", "振翼发 6v 闪光 梦境球 大个子之证 全奖章 全技能 + 甲贺忍蛙 闪光 6V 全技能 小个子 终极球+喵头目 闪光 6V 全技能 小个子 终极球+赛富豪 6V 全技能 大个子 终极球 + 呆壳兽 闪光 6V 全技能 大个子 终极球", null, 1, 1, null)), null, null);
     }
 
     public void trade(final TradeElementModel tradeElementModel, Function<TradeElementModel, String> noticeFunction, Function<DecodeTrainerResponse.Data, FunctionResult<Boolean>> verification) throws DecoderException, IOException, InterruptedException {
@@ -190,7 +190,13 @@ public class SwitchSysbotAggregateService {
 
 
         //生成PKM
-        List<String> pkms = generatePokemon(pkmContent, additional, tradeElementModel.getData().getPkmLimit()).getData().getData();
+        List<String> pkms =
+                (
+                        tradeElementModel.getData().isFile() ?
+                                generatePokemon(Arrays.asList(tradeElementModel.getData().getDataStream().toByteArray()), additional)
+                                :
+                                generatePokemon(pkmContent, additional, tradeElementModel.getData().getPkmLimit())
+                ).getData().getData();
         for (String pkmData : pkms) {
             pkmList.add(Base64.getDecoder().decode(pkmData));
         }

@@ -7,9 +7,10 @@ import com.github.cheukbinli.core.im.dodo.handler.EventBodyChannelMessageHandler
 import com.github.cheukbinli.core.im.dodo.handler.EventBodyPersonalMessageHandler;
 import com.github.cheukbinli.core.im.dodo.model.Authorization;
 import com.github.cheukbinli.core.im.dodo.model.DodoMessageInfoModel;
-import com.github.cheukbinli.core.im.dodo.model.basic.MessageBodyText;
+import com.github.cheukbinli.core.im.dodo.model.basic.MessageBody;
 import com.github.cheukbinli.core.im.dodo.model.dto.ChanneInfo;
 import com.github.cheukbinli.core.im.dodo.model.dto.RobotInfo;
+import com.github.cheukbinli.core.im.dodo.model.dto.request.MessageBodyTextRequest;
 import com.github.cheukbinli.core.im.dodo.model.dto.request.SetChannelMessageSendRequest;
 import com.github.cheukbinli.core.im.dodo.model.dto.request.SetPersonalMessageSendRequest;
 import com.github.cheukbinli.core.im.dodo.model.dto.resopnse.GetChannelListResponse;
@@ -146,16 +147,16 @@ public class DodoApiServer implements ImServer {
     }
 
     public void personalMessageSend(String toId, String islandSourceId, String message) throws IOException {
-        dodoApi.SetPersonalMessageSend(new SetPersonalMessageSendRequest().setDodoSourceId(toId).setIslandSourceId(islandSourceId).setMessageBody(new MessageBodyText().setContent(message)));
+        dodoApi.SetPersonalMessageSend(new SetPersonalMessageSendRequest().setDodoSourceId(toId).setIslandSourceId(islandSourceId).setMessageBody(new MessageBodyTextRequest().setContent(message)));
 
     }
 
     public void channelMessageSend(String channel, String atId, boolean atAll, String message) throws IOException {
-        dodoApi.SetChannelMessageSend(new SetChannelMessageSendRequest().setChannelId(channel).setMessageBody(new MessageBodyText().setContent(String.format("<@%s>%s", atAll ? atId : "!" + atId, message))));
+        dodoApi.SetChannelMessageSend(new SetChannelMessageSendRequest().setChannelId(channel).setMessageBody(new MessageBodyTextRequest().setContent(String.format("<@%s>%s", atAll ? atId : "!" + atId, message))));
     }
 
     private void channelMessageSend(String channel, String message) throws IOException {
-        dodoApi.SetChannelMessageSend(new SetChannelMessageSendRequest().setChannelId(channel).setMessageBody(new MessageBodyText().setContent(message)));
+        dodoApi.SetChannelMessageSend(new SetChannelMessageSendRequest().setChannelId(channel).setMessageBody(new MessageBodyTextRequest(message)));
     }
 
     public ChanneInfo getChanneInfo(String channelID) throws IOException {
@@ -173,7 +174,7 @@ public class DodoApiServer implements ImServer {
                         .setIslandSourceId(islandSourceId)
 //                        .setChannelId(item.getChannelId())
                         .setAt(atId)
-                        .setMessageBody(new MessageBodyText(message))
+                        .setMessageBody(new MessageBody().setContent(message))
         );
     }
 

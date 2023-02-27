@@ -3,22 +3,30 @@ package com.github.cheukbinli.core;
 import com.github.cheukbinli.core.im.ImServer;
 import com.github.cheukbinli.core.im.dodo.DodoApiServer;
 import com.github.cheukbinli.core.im.dodo.model.Authorization;
+import com.github.cheukbinli.core.model.FunctionResult;
 import com.github.cheukbinli.core.model.NoticeFunctionModel;
 import com.github.cheukbinli.core.model.TradeElementModel;
 import com.github.cheukbinli.core.ns.constant.SwitchButton;
 import com.github.cheukbinli.core.ns.model.response.GeneratePokemonResponse;
+import com.github.cheukbinli.core.ns.service.SwitchSysbotAggregateService;
 import com.github.cheukbinli.core.queue.DefaulttQueueService;
 import com.github.cheukbinli.core.queue.QueueService;
-import com.github.cheukbinli.core.ns.service.SwitchSysbotAggregateService;
+import com.github.cheukbinli.core.storeage.StoreageAggregateServices;
+import com.github.cheukbinli.core.storeage.entity.TransactionsEntity;
+import com.github.cheukbinli.core.storeage.entity.UserEntity;
 import com.github.cheukbinli.core.util.NetUtil;
 import lombok.Getter;
 import org.apache.commons.codec.DecoderException;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+
+import static com.github.cheukbinli.core.model.FunctionResult.DEFAULT_RESULT;
 
 public class application {
 
@@ -46,8 +54,19 @@ public class application {
     private Map<String, Object> trainerInfo = null;
     //    private boolean emptyPassWord = true;
     private boolean emptyPassWord = false;
+    private StoreageAggregateServices storeageAggregateServices;
+
+    private int activityPrefixLen = "activity:".length();
+
+    public int getActivityId(String content) {
+        if (null != content && content.length() > 0) {
+            return Integer.valueOf(content.substring(activityPrefixLen));
+        }
+        return -1;
+    }
 
     public void start() {
+        storeageAggregateServices = new StoreageAggregateServices();
         queueService = new DefaulttQueueService();
         verifiedQueueService = new DefaulttQueueService();
         switchSysbotAggregateService = new SwitchSysbotAggregateService(switchIp, switchPort, sysbotIp, sysbotPort);
@@ -63,10 +82,14 @@ public class application {
         trainerInfo.put("DisplaySID", 249781);
 
         try {
-            imServer.channelMessageSend("1485346", "online", true, "小喇叭上班打卡，开始派送咯。");
+            imServer.channelMessageSend("1485346", "online", true,
+                    "Hello very body，开始派送咯。\n" +
+                            "目前支持批量格式（使用加号分割）：喷火龙 6V+甲贺忍蛙 全技能+兰螳花 全奖章。\n" +
+                            "支持PKHeX文件：当前版本支持 pk9 后缀版本的文体。\n" +
+                            "又是愉快的一天！"
+            );
         } catch (IOException e) {
             GlobalLogger.append(e);
-//            throw new RuntimeException(e);
         }
 
     }
@@ -105,7 +128,11 @@ public class application {
                                 imServer.channelMessageSend(trade.getChannel(), trade.getIdentity(), false, "取消成功。");
                                 continue;
                             }
-                            GeneratePokemonResponse response = switchSysbotAggregateService.generatePokemon(trade.getData().getContent(), trainerInfo, trade.getData().getPkmLimit());
+                            GeneratePokemonResponse response =
+                                    trade.getData().isFile() ?
+                                            switchSysbotAggregateService.generatePokemon(Arrays.asList(trade.getData().getDataStream().toByteArray()), trainerInfo)
+                                            :
+                                            switchSysbotAggregateService.generatePokemon(trade.getData().getContent(), trainerInfo, trade.getData().getPkmLimit());
                             if (response.getCode() != 0) {
                                 imServer.channelMessageSend(trade.getChannel(), trade.getIdentity(), false, response.getError());
                                 continue;
@@ -183,21 +210,41 @@ public class application {
                         try {
 //                            imServer.channelMessageSend(trade.getChannel(), trade.getIdentity(), false, "\n派送:" + trade.getData().getPkmName() + "\n密码:见私信\n状态:搜索中");
                             imServer.personalMessageSend(trade.getIdentity(), trade.getIslandSource(), "\n派送:" + trade.getData().getPkmName() + "\n配对密语：" + trade.getData().getRandomCode());
-                            switchSysbotAggregateService.trade(trade, new Function<TradeElementModel, String>() {
-                                @Override
-                                public String apply(TradeElementModel s) {
+                            switchSysbotAggregateService.trade(trade, (s) -> {
 //                                    imServer.personalMessageSend(s.getIdentity(), s.getIslandSource(), s.getOperationMessage());
+                                try {
+                                    imServer.writeLogAndWriteChannel(s.getIslandSource(), s.getChannel(), s.getIdentity(), s.getOperationMessage());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                    GlobalLogger.append(e);
+                                }
+                                return null;
+                            }, (data) -> {
+                                UserEntity userEntity = storeageAggregateServices.addUser(new UserEntity().setNid(data.getNintendoId()).setPlatformUserId(trade.getIdentity()).setUserName(trade.getUserName()));
+                                int activityId = getActivityId(data.getAdditional());
+                                if (activityId > 0) {
                                     try {
-                                        imServer.writeLogAndWriteChannel(s.getIslandSource(), s.getChannel(), s.getIdentity(), s.getOperationMessage());
-                                    } catch (IOException e) {
+                                        List<UserEntity> list = storeageAggregateServices.getTransactionsService().findList(new TransactionsEntity().setNid(data.getNintendoId()).setActivityId(activityId));
+                                        if (list.size() > 0) {
+                                            return new FunctionResult<Boolean>().setCode(-1).setMsg("你已参与了活动，请不要重复发起交易。");
+                                        }
+                                        storeageAggregateServices.getTransactionsService().add(new TransactionsEntity()
+                                                .setUserId(userEntity.getId())
+                                                .setNid(userEntity.getNid())
+                                                .setPlatformUserId(userEntity.getPlatformUserId())
+                                                .setActivityId(activityId)
+                                                .setTime(System.currentTimeMillis())
+                                        );
+                                    } catch (Exception e) {
                                         e.printStackTrace();
                                         GlobalLogger.append(e);
                                     }
-                                    return null;
                                 }
+                                return DEFAULT_RESULT;
                             });
                         } catch (Exception e) {
                             e.printStackTrace();
+                            GlobalLogger.append(e);
                             break;
                         } finally {
                             queueService.resetCurrentElement();

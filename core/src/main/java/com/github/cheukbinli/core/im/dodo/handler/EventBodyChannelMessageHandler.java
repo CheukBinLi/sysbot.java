@@ -3,6 +3,7 @@ package com.github.cheukbinli.core.im.dodo.handler;
 import com.github.cheukbinli.core.im.EventHandler;
 import com.github.cheukbinli.core.im.EventManager;
 import com.github.cheukbinli.core.im.ImChannel;
+import com.github.cheukbinli.core.im.dodo.DodoApiServer;
 import com.github.cheukbinli.core.im.dodo.model.dto.ChanneInfo;
 import com.github.cheukbinli.core.im.dodo.model.event.EventBodyChannelMessage;
 import com.github.cheukbinli.core.im.dodo.model.event.EventSubjectModel;
@@ -33,24 +34,36 @@ public class EventBodyChannelMessageHandler implements EventHandler<WebSocket, E
     }
 
     @Override
-    public boolean doExcute(ImChannel<WebSocket> webSocket, EventSubjectModel eventSubjectModel, final EventBodyChannelMessage.EventBodyChannelMessageBody content) {
+    public boolean doExcute(ImChannel<WebSocket> webSocket, EventSubjectModel eventSubjectModel, final EventBodyChannelMessage.EventBodyChannelMessageBody content) throws IOException {
 //        System.out.println("收到消息:" + content.getMessageBody().getContent());
-
-        String msgContent = content.getMessageBody().getContent();
-        if (null == msgContent) {
-            return false;
-        }
-        if (msgContent.startsWith("<@!")) {
-            int endIndex = msgContent.indexOf(">");
-            String robotId = msgContent.substring(3, endIndex);
-            if (!getEventManager().getRobotInfo().getDodoSourceId().equals(robotId)) {
-                return false;
-            }
-            content.getMessageBody().setContent(msgContent.substring(endIndex + 1).trim());
-            if (content.getMessageBody().getContent().length() < 1) {
-                return false;
-            }
-            return true;
+        switch (content.getMessageType()) {
+            case 1:
+                String msgContent = content.getMessageBody().getContent();
+                if (null == msgContent) {
+                    return false;
+                }
+                if (msgContent.startsWith("<@!")) {
+                    int endIndex = msgContent.indexOf(">");
+                    String robotId = msgContent.substring(3, endIndex);
+                    if (!getEventManager().getRobotInfo().getDodoSourceId().equals(robotId)) {
+                        return false;
+                    }
+                    content.getMessageBody().setContent(msgContent.substring(endIndex + 1).trim());
+                    if (content.getMessageBody().getContent().length() < 1) {
+                        return false;
+                    }
+                    return true;
+                }
+            case 5:
+                if (!content.getMessageBody().getName().toLowerCase().endsWith(".pk9")) {
+//                    throw new RuntimeException("只支持pk9文件");
+                    getEventManager().getImServer().channelMessageSend(content.getChannelId(), content.getDodoSourceId(), false, "只支持pk9文件");
+                    return false;
+                }
+                content.getMessageBody().setDataStream(((DodoApiServer) getEventManager().getImServer()).getDodoApi().download(content.getMessageBody().getUrl(), content.getMessageBody().getSize()));
+                return true;
+            default:
+                break;
         }
         //无效数据
         return false;
@@ -61,7 +74,7 @@ public class EventBodyChannelMessageHandler implements EventHandler<WebSocket, E
 
         TradeElementModel elementModel = new TradeElementModel();
 //        elementModel.setVip(true);
-        TradeElementModel.Data data = new TradeElementModel.Data("", "", mode.getMessageBody().getContent());
+        TradeElementModel.Data data = new TradeElementModel.Data("", "", mode.getMessageBody().getContent(), mode.getMessageBody().getDataStream(), mode.getMessageType());
         ChanneInfo channeInfo = getEventManager().getImServer().getChanneInfo(mode.getChannelId());
         elementModel
                 .setData(data)

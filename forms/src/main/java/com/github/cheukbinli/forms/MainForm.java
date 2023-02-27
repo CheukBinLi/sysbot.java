@@ -4,7 +4,7 @@ import com.github.cheukbinli.core.GlobalLogger;
 import com.github.cheukbinli.core.application;
 import com.github.cheukbinli.core.im.dodo.DodoApi;
 import com.github.cheukbinli.core.im.dodo.model.Authorization;
-import com.github.cheukbinli.core.im.dodo.model.basic.MessageBodyText;
+import com.github.cheukbinli.core.im.dodo.model.dto.request.MessageBodyTextRequest;
 import com.github.cheukbinli.core.im.dodo.model.dto.request.SetChannelMessageSendRequest;
 import com.github.cheukbinli.core.ns.constant.ScreenState;
 import org.apache.commons.codec.binary.Hex;
@@ -56,6 +56,12 @@ public class MainForm extends JFrame {
     private JTextField noticeClientIdTextField2;
     private JTextField noticeTokenTextField1;
     private JButton 连接Button;
+    private JButton 连接Button1001;
+    private JTextArea textArea1001;
+    private JButton 发送Button1001;
+    private JButton 清空Button1001;
+    private JButton 上班Button1001;
+    private JButton 下班Button1001;
 
     volatile boolean pwoerOn = true;
 
@@ -219,8 +225,9 @@ public class MainForm extends JFrame {
                     noticeRobot.SetChannelMessageSend(
                             new SetChannelMessageSendRequest()
                                     .setChannelId(noticeChannelIDTextField.getText())
-                                    .setMessageBody(new MessageBodyText(String.format("<@online>%s", noticeMessagetextArea3.getText())))
+                                    .setMessageBody(new MessageBodyTextRequest().setContent(String.format("<@online>%s", noticeMessagetextArea3.getText())))
                     );
+                    发送Button.setText("");
                 } catch (IOException ex) {
                     GlobalLogger.append(ex);
                     ex.printStackTrace();
