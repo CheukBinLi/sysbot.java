@@ -12,6 +12,7 @@ import com.github.cheukbinli.core.ns.service.SwitchSysbotAggregateService;
 import com.github.cheukbinli.core.queue.DefaulttQueueService;
 import com.github.cheukbinli.core.queue.QueueService;
 import com.github.cheukbinli.core.storeage.StoreageAggregateServices;
+import com.github.cheukbinli.core.storeage.entity.TransactionLogEntity;
 import com.github.cheukbinli.core.storeage.entity.TransactionsEntity;
 import com.github.cheukbinli.core.storeage.entity.UserEntity;
 import com.github.cheukbinli.core.util.NetUtil;
@@ -19,6 +20,7 @@ import lombok.Getter;
 import org.apache.commons.codec.DecoderException;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -240,6 +242,20 @@ public class application {
                                         e.printStackTrace();
                                         GlobalLogger.append(e);
                                     }
+                                }
+                                try {
+                                    storeageAggregateServices.getTransactionLogService().add(
+                                            new TransactionLogEntity()
+                                                    .setUser(userEntity.getId())
+                                                    .setNid(userEntity.getNid())
+                                                    .setUserName(userEntity.getUserName())
+                                                    .setPkm(trade.getData().getPkmName())
+                                    );
+                                } catch (SQLException e) {
+                                    throw new RuntimeException(e);
+                                } catch (ClassNotFoundException e) {
+                                    e.printStackTrace();
+                                    GlobalLogger.append(e);
                                 }
                                 return DEFAULT_RESULT;
                             });

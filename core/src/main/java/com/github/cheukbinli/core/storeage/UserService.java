@@ -13,6 +13,10 @@ public class UserService {
         return sqliteHelper.executeInsert(userEntity);
     }
 
+    public int update(UserEntity userEntity) throws SQLException, ClassNotFoundException {
+        return sqliteHelper.executeUpdate(userEntity);
+    }
+
     public String getCondiction(UserEntity userEntity) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT * FROM ").append(userEntity.getTableName()).append(" WHERE 1=1 ");

@@ -13,12 +13,15 @@ public class StoreageAggregateServices {
 
     TransactionsService transactionsService = new TransactionsService();
     UserService userService = new UserService();
+    TransactionLogService transactionLogService = new TransactionLogService();
 
     public UserEntity addUser(UserEntity userEntity) {
         try {
+            userEntity.setTransactionTime(System.currentTimeMillis());
             do {
                 UserEntity user = userService.find(new UserEntity().setNid(userEntity.getNid()));
                 if (null != user) {
+                    userService.update(userEntity.setId(user.getId()));
                     return user;
                 }
                 userService.add(userEntity);

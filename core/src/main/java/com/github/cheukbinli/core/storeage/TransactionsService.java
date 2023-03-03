@@ -20,7 +20,7 @@ public class TransactionsService {
             sql.append("AND id=").append(entity.getId());
         }
         if (entity.getUserId() != 0) {
-            sql.append("AND userId=").append(entity.getNid());
+            sql.append("AND userId=").append(entity.getUserId());
         }
         if (entity.getNid() != 0) {
             sql.append("AND nid=").append(entity.getNid());

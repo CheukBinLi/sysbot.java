@@ -6,21 +6,20 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /***
- * 用户表
+ * 交换日志
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class UserEntity implements BaseEntity {
+public class TransactionLogEntity implements BaseEntity {
 
     private long id;
     private long nid;
+    private long user;
     private String userName;
-    private String platformUserId;
-    private String platformUserName;
-    private int level;
-    private int isEnable;
-    private long transactionTime;
+    private String pkm;
+    private String pkmName;
+    private long createTime;
 
 }

@@ -35,10 +35,11 @@ public class SqliteHelper {
             synchronized (SqliteHelper.class) {
                 if (null == instance) {
                     try {
+                        System.out.println(InitTable.getDbPatch(DB_NAME));
                         File db = new File(InitTable.getDbPatch(DB_NAME));
                         if (!db.exists()) {
 //                            InputStream in = SqliteHelper.class.getResourceAsStream("/data");
-                            InputStream in = SqliteHelper.class.getClassLoader().getResourceAsStream("data");
+                            InputStream in = SqliteHelper.class.getClassLoader().getResourceAsStream(DB_NAME);
                             FileOutputStream out = new FileOutputStream(db);
 //                            db.createNewFile();
                             int code;
@@ -372,6 +373,42 @@ public class SqliteHelper {
             sql.delete(sql.length() - 1, sql.length());
             sql.append(");");
             int c = getStatement().executeUpdate(sql.toString());
+            return c;
+        } finally {
+            destroyed();
+        }
+    }
+
+    @SneakyThrows
+    public int executeUpdate(BaseEntity baseEntity) throws SQLException, ClassNotFoundException {
+
+        Map<String, Field> param = getFields(baseEntity.getClass(), true);
+
+        try {
+            StringBuffer sql = new StringBuffer();
+            param.forEach((k, v) -> {
+                if ("id".equals(k)) {
+                    return;
+                }
+                try {
+                    Object value = v.get(baseEntity);
+//                    boolean isString = v.getType().isAssignableFrom(String.class);
+                    String str = String.class == v.getType() ? "'" : "";
+                    if (null != value) {
+                        sql.append(",").append(k).append("=").append(str).append(v.get(baseEntity)).append(str);
+                    }
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            });
+            sql.append(" WHERE id=").append(baseEntity.getId());
+
+            int c = getStatement().executeUpdate(
+                    "UPDATE " +
+                            baseEntity.getTableName() +
+                            " SET " +
+                            sql.substring(1)
+            );
             return c;
         } finally {
             destroyed();

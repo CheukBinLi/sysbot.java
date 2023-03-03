@@ -234,7 +234,7 @@ public class MainForm extends JFrame {
                                     .setChannelId(noticeChannelIDTextField.getText())
                                     .setMessageBody(new MessageBodyTextRequest().setContent(String.format("<@online>%s", noticeMessagetextArea3.getText())))
                     );
-                    发送Button.setText("");
+                    noticeChannelIDTextField.setText("");
                 } catch (IOException ex) {
                     GlobalLogger.append(ex);
                     ex.printStackTrace();
