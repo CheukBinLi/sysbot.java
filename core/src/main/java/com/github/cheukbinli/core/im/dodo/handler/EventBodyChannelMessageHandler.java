@@ -12,6 +12,7 @@ import com.github.cheukbinli.core.queue.ElementModel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import okhttp3.WebSocket;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.regex.Matcher;
@@ -55,7 +56,11 @@ public class EventBodyChannelMessageHandler implements EventHandler<WebSocket, E
                     return true;
                 }
             case 5:
-                if (!content.getMessageBody().getName().toLowerCase().endsWith(".pk9")) {
+                if (StringUtils.isBlank(content.getMessageBody().getUrl())) {
+//                    getEventManager().getImServer().channelMessageSend(content.getChannelId(), content.getDodoSourceId(), false, "空URL请重新上传");
+                    return false;
+                }
+                if (StringUtils.isNotBlank(content.getMessageBody().getName()) && !content.getMessageBody().getName().toLowerCase().endsWith(".pk9")) {
 //                    throw new RuntimeException("只支持pk9文件");
                     getEventManager().getImServer().channelMessageSend(content.getChannelId(), content.getDodoSourceId(), false, "只支持pk9文件");
                     return false;

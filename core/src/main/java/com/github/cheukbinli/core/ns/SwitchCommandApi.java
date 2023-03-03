@@ -340,8 +340,7 @@ public class SwitchCommandApi extends BufferPoolUtil {
     }
 
     /***
-     * 切换屏幕显示的开/关，如果不需要，有助于节省电源
-     * Toggles the screen display On/Off, useful for saving power if not needed
+     * 截图
      * @throws IOException
      */
     public byte[] pixelPeek() throws IOException, InterruptedException, DecoderException {
@@ -392,9 +391,11 @@ public class SwitchCommandApi extends BufferPoolUtil {
         return result;
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException, DecoderException {
 //        System.out.println(new SwitchCommandApi("", 0).longArrayToHexString(PokeDataOffsetsSV.LibAppletWeID));
-        SwitchCommandApi api = new SwitchCommandApi("192.168.1.125", 6000);
+//        SwitchCommandApi api = new SwitchCommandApi("192.168.1.125", 6000);
+        SwitchCommandApi api = new SwitchCommandApi("192.168.50.220", 6000);
+        System.out.println(Hex.encodeHexString(api.pixelPeek()));
 //        api.clickButton(SwitchButton.Button.HOME, 1000);
 //        api.clickButton(SwitchButton.Button.X, 1000);
 //        api.clickButton(SwitchButton.Button.A, 8000);

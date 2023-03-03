@@ -1,5 +1,7 @@
 package com.github.cheukbinli.forms;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.TypeReference;
 import com.github.cheukbinli.core.GlobalLogger;
 import com.github.cheukbinli.core.application;
 import com.github.cheukbinli.core.im.dodo.DodoApi;
@@ -7,15 +9,19 @@ import com.github.cheukbinli.core.im.dodo.model.Authorization;
 import com.github.cheukbinli.core.im.dodo.model.dto.request.MessageBodyTextRequest;
 import com.github.cheukbinli.core.im.dodo.model.dto.request.SetChannelMessageSendRequest;
 import com.github.cheukbinli.core.ns.constant.ScreenState;
+import com.github.cheukbinli.core.storeage.entity.UserEntity;
 import org.apache.commons.codec.binary.Hex;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -27,7 +33,6 @@ public class MainForm extends JFrame {
     private JButton 截图Button;
     private JButton 重启PGButton;
     private JTabbedPane tabbedPane1;
-    private JTable table1;
     private JTextField a1111TextField;
     private JTextField a127001TextField;
     private JTextField textField1;
@@ -62,10 +67,12 @@ public class MainForm extends JFrame {
     private JButton 清空Button1001;
     private JButton 上班Button1001;
     private JButton 下班Button1001;
+    private JButton button2;
+    private JTable table1;
 
     volatile boolean pwoerOn = true;
 
-    private application a = null;
+    private application application = null;
     private Image image = null;
     private volatile boolean screenshot = false;
     private DodoApi noticeRobot;
@@ -101,7 +108,7 @@ public class MainForm extends JFrame {
     }
 
     public MainForm() {
-        a = new application();
+        application = new application();
         ExecutorService executorService = Executors.newCachedThreadPool();
         启动Button.addActionListener(new ActionListener() {
             @Override
@@ -113,7 +120,7 @@ public class MainForm extends JFrame {
                 executorService.submit(new Runnable() {
                     @Override
                     public void run() {
-                        a.start();
+                        application.start();
                     }
                 });
                 executorService.submit(new Runnable() {
@@ -171,7 +178,7 @@ public class MainForm extends JFrame {
 //                    throw new RuntimeException(ex);
 //                }
                 try {
-                    byte[] imageByte = a.getSwitchSysbotAggregateService().getSwitchCommandApi().pixelPeek();
+                    byte[] imageByte = application.getSwitchSysbotAggregateService().getSwitchCommandApi().pixelPeek();
                     image = ImageIO.read(new ByteArrayInputStream(Hex.decodeHex(new String(imageByte))));
                 } catch (Exception e1) {
                     throw new RuntimeException(e1);
@@ -182,7 +189,7 @@ public class MainForm extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    a.getSwitchSysbotAggregateService().getSwitchCommandApi().SetScreen(pwoerOn ? ScreenState.Off : ScreenState.On);
+                    application.getSwitchSysbotAggregateService().getSwitchCommandApi().SetScreen(pwoerOn ? ScreenState.Off : ScreenState.On);
                     pwoerOn = !pwoerOn;
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
@@ -193,7 +200,7 @@ public class MainForm extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    a.getSwitchSysbotAggregateService().getSwitchService().restrart();
+                    application.getSwitchSysbotAggregateService().getSwitchService().restrart();
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 } catch (InterruptedException ex) {
@@ -232,6 +239,28 @@ public class MainForm extends JFrame {
                     GlobalLogger.append(ex);
                     ex.printStackTrace();
                 }
+            }
+        });
+        button2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<UserEntity> userEntityList = application.getStoreageAggregateServices().findUser(new UserEntity());
+                if (null == userEntityList || userEntityList.isEmpty()) {
+                    return;
+                }
+                TypeReference<List<Map<String, String>>> eventSubjectModelTypeReference = new TypeReference<List<Map<String, String>>>(ArrayList.class, HashMap.class) {
+                };
+                List<Map<String, String>> data = JSON.parseObject(JSON.toJSONString(userEntityList), eventSubjectModelTypeReference.getType());
+
+                DefaultTableModel tableModel = new DefaultTableModel();
+                table1.setModel(tableModel);
+                data.get(0).forEach((k, v) -> {
+                    tableModel.addColumn(k);
+                });
+                data.forEach(item -> {
+                    tableModel.addRow(new Vector<>(item.values()));
+                });
+
             }
         });
     }

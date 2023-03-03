@@ -422,7 +422,8 @@ public class SwitchService {
     }
 
     public static void main(String[] args) throws DecoderException, IOException, InterruptedException {
-        SwitchCommandApi api = new SwitchCommandApi("192.168.1.125", 6000);
+//        SwitchCommandApi api = new SwitchCommandApi("192.168.1.125", 6000);
+        SwitchCommandApi api = new SwitchCommandApi("192.168.50.220", 6000);
 //        System.out.println(new SwitchService(api).IsConnectedOnline());
         SwitchService a = new SwitchService(api);
         api.SetScreen(ScreenState.On);

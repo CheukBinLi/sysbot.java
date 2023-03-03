@@ -37,6 +37,8 @@ public class application {
     QueueService<TradeElementModel> verifiedQueueService;//待验证队列
     @Getter
     QueueService<TradeElementModel> queueService;
+    @Getter
+    private StoreageAggregateServices storeageAggregateServices;
 
     private String switchIp = "192.168.1.125";
     private int switchPort = 6000;
@@ -54,7 +56,6 @@ public class application {
     private Map<String, Object> trainerInfo = null;
     //    private boolean emptyPassWord = true;
     private boolean emptyPassWord = false;
-    private StoreageAggregateServices storeageAggregateServices;
 
     private int activityPrefixLen = "activity:".length();
 
@@ -83,7 +84,7 @@ public class application {
 
         try {
             imServer.channelMessageSend("1485346", "online", true,
-                    "Hello very body，开始派送咯。\n" +
+                    "Hello very body，好久不见，支持版本1.2.0开始派送了。\n" +
                             "目前支持批量格式（使用加号分割）：喷火龙 6V+甲贺忍蛙 全技能+兰螳花 全奖章。\n" +
                             "支持PKHeX文件：当前版本支持 pk9 后缀版本的文体。\n" +
                             "又是愉快的一天！"
@@ -124,7 +125,7 @@ public class application {
                                 imServer.channelMessageSend(trade.getChannel(), trade.getIdentity(), false, position < 0 ? "您不在队列。" : "您当前的位置是:" + (position == 0 ? "交换搜索中，请赶快链接！否则我会退出" : position));
                                 continue;
                             } else if ("取消".equals(trade.getData().getContent())) {
-                                queueService.remove(trade.getQueueChannel());
+                                queueService.remove(trade.getIdentity());
                                 imServer.channelMessageSend(trade.getChannel(), trade.getIdentity(), false, "取消成功。");
                                 continue;
                             }
@@ -224,7 +225,7 @@ public class application {
                                 int activityId = getActivityId(data.getAdditional());
                                 if (activityId > 0) {
                                     try {
-                                        List<UserEntity> list = storeageAggregateServices.getTransactionsService().findList(new TransactionsEntity().setNid(data.getNintendoId()).setActivityId(activityId));
+                                        List<TransactionsEntity> list = storeageAggregateServices.getTransactionsService().findList(new TransactionsEntity().setNid(data.getNintendoId()).setActivityId(activityId));
                                         if (list.size() > 0) {
                                             return new FunctionResult<Boolean>().setCode(-1).setMsg("你已参与了活动，请不要重复发起交易。");
                                         }

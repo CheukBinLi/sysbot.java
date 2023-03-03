@@ -3,12 +3,13 @@ package com.github.cheukbinli.core.ns.service;
 import com.github.cheukbinli.core.GlobalLogger;
 import com.github.cheukbinli.core.model.FunctionResult;
 import com.github.cheukbinli.core.model.TradeElementModel;
+import com.github.cheukbinli.core.ns.SwitchCommandApi;
+import com.github.cheukbinli.core.ns.SysBotApi;
+import com.github.cheukbinli.core.ns.constant.ScreenState;
+import com.github.cheukbinli.core.ns.constant.SwitchButton;
 import com.github.cheukbinli.core.ns.model.response.DecodeTradePartnerResponse;
 import com.github.cheukbinli.core.ns.model.response.DecodeTrainerResponse;
 import com.github.cheukbinli.core.ns.model.response.GeneratePokemonResponse;
-import com.github.cheukbinli.core.ns.SwitchCommandApi;
-import com.github.cheukbinli.core.ns.SysBotApi;
-import com.github.cheukbinli.core.ns.constant.SwitchButton;
 import com.github.cheukbinli.core.util.MessageTemplate;
 import lombok.Getter;
 import org.apache.commons.codec.DecoderException;
@@ -178,7 +179,11 @@ public class SwitchSysbotAggregateService {
             }
         }
 
-        FunctionResult<Boolean> verificationResult = verification.apply(new DecodeTrainerResponse.Data().setNintendoId(switchService.GetTradePartnerNID()).setAdditional(tradeElementModel.getData().getAdditional()));
+        FunctionResult<Boolean> verificationResult = verification.apply(
+                new DecodeTrainerResponse.Data()
+                        .setNintendoId(switchService.GetTradePartnerNID())
+                        .setAdditional(tradeElementModel.getData().getAdditional())
+        );
         if (!verificationResult.isSuccess()) {
             noticeFunction.apply((TradeElementModel) tradeElementModel.setOperationMessage(
                     MessageTemplate.messageTemplate(tradeElementModel.getIdentity(), null, null, null, null, 0, verificationResult.getMsg(), MessageTemplate.MessageTemplateStatus.ERROR_MSG))
@@ -285,7 +290,8 @@ public class SwitchSysbotAggregateService {
         //    private final int switchPort = 6000;
         //    private final String sysbotIp = "127.0.0.1";
         //    private final int sysbotPort = 1111;
-        SwitchSysbotAggregateService service = new SwitchSysbotAggregateService("192.168.1.125", 6000, "127.0.0.1", 1111);
+//        SwitchSysbotAggregateService service = new SwitchSysbotAggregateService("192.168.1.125", 6000, "127.0.0.1", 1111);
+        SwitchSysbotAggregateService service = new SwitchSysbotAggregateService("192.168.50.220", 6000, "127.0.0.1", 1111);
 
 //        byte[] slotOne = service.switchService.pullPKM(1, 8);
 //
@@ -312,12 +318,12 @@ public class SwitchSysbotAggregateService {
 //        service.generatePokemon("赛富豪 6V 全技能 大个子 终极球 + 润水鸭 6V 全技能 小个子 终极球");
 //        DecodeTrainerPartnerResponse response = service.getTradePartnerInfo();
 
-//        service.switchService.IsOnOverworld();
-//        service.switchService.IsConnectedOnline();
+        service.switchCommandApi.SetScreen(ScreenState.On);
+        System.out.println(service.switchService.IsOnOverworld());
+        System.out.println(service.switchService.IsConnectedOnline());
 //        service.switchService.ClearTradePartnerNID();
-//        System.out.println(service.switchService.GetTradePartnerNID());
-//        service.getMyTrainer();
-//        service.switchCommandApi.SetScreen(ScreenState.Off);
+        System.out.println(service.switchService.GetTradePartnerNID());
+        service.getMyTrainer();
 //        service.trade();
 //        service.switchService.enterPokePortal();
         DecodeTrainerResponse myStatus = service.getMyTrainer();

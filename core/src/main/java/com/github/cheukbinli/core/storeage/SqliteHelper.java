@@ -5,6 +5,10 @@ import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.ArrayList;
@@ -23,6 +27,7 @@ public class SqliteHelper {
     private ResultSet resultSet;
     private String dbFilePath;
     static SqliteHelper instance;
+    public static String DB_NAME = "data";
     private static final Map<String, Map<String, Field>> FIELD_CACHE = new ConcurrentHashMap<>();
 
     public static SqliteHelper getInstance() {
@@ -30,10 +35,26 @@ public class SqliteHelper {
             synchronized (SqliteHelper.class) {
                 if (null == instance) {
                     try {
-                        instance = new SqliteHelper("data");
+                        File db = new File(InitTable.getDbPatch(DB_NAME));
+                        if (!db.exists()) {
+//                            InputStream in = SqliteHelper.class.getResourceAsStream("/data");
+                            InputStream in = SqliteHelper.class.getClassLoader().getResourceAsStream("data");
+                            FileOutputStream out = new FileOutputStream(db);
+//                            db.createNewFile();
+                            int code;
+                            while ((code = in.read()) != -1) {
+                                out.write(code);
+                            }
+                            out.close();
+                            in.close();
+                        }
+                        instance = new SqliteHelper(InitTable.getDbPatch(DB_NAME));
+                        InitTable.init(instance);
                     } catch (ClassNotFoundException e) {
                         throw new RuntimeException(e);
                     } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 }
@@ -65,7 +86,7 @@ public class SqliteHelper {
     public Connection getConnection(String dbFilePath) throws ClassNotFoundException, SQLException {
         Connection conn = null;
         Class.forName("org.sqlite.JDBC");
-        conn = DriverManager.getConnection("jdbc:sqlite::resource:" + dbFilePath);
+        conn = DriverManager.getConnection("jdbc:sqlite:" + dbFilePath);
 //        conn = DriverManager.getConnection("jdbc:sqlite::resource:" + dbFilePath);
         return conn;
     }
